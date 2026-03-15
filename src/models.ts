@@ -2,17 +2,31 @@ import { ModelInfo } from "./types";
 
 // --- Gemini CLI Models Configuration ---
 export const geminiCliModels: Record<string, ModelInfo> = {
-	"gemini-3-pro-preview": {
+	// --- Gemini 3.x Series (Preview) ---
+	"gemini-3.1-pro-preview": {
 		maxTokens: 65536,
 		contextWindow: 1_048_576,
 		supportsImages: true,
 		supportsAudios: true,
 		supportsVideos: true,
 		supportsPdfs: true,
-		supportsPromptCache: false,
+		supportsPromptCache: true,
 		inputPrice: 0,
 		outputPrice: 0,
-		description: "Google's Gemini 3.0 Pro Preview model via OAuth (free tier)",
+		description: "Google's latest reasoning-first model, optimized for complex agentic workflows and coding",
+		thinking: true
+	},
+	"gemini-3.1-pro-preview-customtools": {
+		maxTokens: 65536,
+		contextWindow: 1_048_576,
+		supportsImages: true,
+		supportsAudios: true,
+		supportsVideos: true,
+		supportsPdfs: true,
+		supportsPromptCache: true,
+		inputPrice: 0,
+		outputPrice: 0,
+		description: "Gemini 3.1 Pro variant optimized for prioritizing custom tools in agentic workflows",
 		thinking: true
 	},
 	"gemini-3-flash-preview": {
@@ -22,12 +36,26 @@ export const geminiCliModels: Record<string, ModelInfo> = {
 		supportsAudios: true,
 		supportsVideos: true,
 		supportsPdfs: true,
-		supportsPromptCache: false,
+		supportsPromptCache: true,
 		inputPrice: 0,
 		outputPrice: 0,
-		description: "Google's Gemini 3.0 Flash Preview model via OAuth (free tier)",
+		description: "Frontier-class performance rivaling larger models at a fraction of the cost",
 		thinking: true
 	},
+	"gemini-3.1-flash-lite-preview": {
+		maxTokens: 65536,
+		contextWindow: 1_048_576,
+		supportsImages: true,
+		supportsAudios: true,
+		supportsVideos: true,
+		supportsPdfs: true,
+		supportsPromptCache: true,
+		inputPrice: 0,
+		outputPrice: 0,
+		description: "Fast, budget-friendly Gemini 3 model for high-volume tasks at scale",
+		thinking: true
+	},
+	// --- Gemini 2.5 Series (Stable) ---
 	"gemini-2.5-pro": {
 		maxTokens: 65536,
 		contextWindow: 1_048_576,
@@ -38,7 +66,7 @@ export const geminiCliModels: Record<string, ModelInfo> = {
 		supportsPromptCache: false,
 		inputPrice: 0,
 		outputPrice: 0,
-		description: "Google's Gemini 2.5 Pro model via OAuth (free tier)",
+		description: "Most advanced 2.5 model for complex tasks, deep reasoning and coding",
 		thinking: true
 	},
 	"gemini-2.5-flash": {
@@ -47,11 +75,11 @@ export const geminiCliModels: Record<string, ModelInfo> = {
 		supportsImages: true,
 		supportsAudios: true,
 		supportsVideos: true,
-		supportsPdfs: true, // it actually supports pdf, docs are wrong https://ai.google.dev/gemini-api/docs/models?hl=en#gemini-2.5-flash
+		supportsPdfs: true,
 		supportsPromptCache: false,
 		inputPrice: 0,
 		outputPrice: 0,
-		description: "Google's Gemini 2.5 Flash model via OAuth (free tier)",
+		description: "Best price-performance model for low-latency, high-volume tasks with reasoning",
 		thinking: true
 	},
 	"gemini-2.5-flash-lite": {
@@ -64,7 +92,7 @@ export const geminiCliModels: Record<string, ModelInfo> = {
 		supportsPromptCache: false,
 		inputPrice: 0,
 		outputPrice: 0,
-		description: "Google's Gemini 2.5 Flash Lite model via OAuth (free tier)",
+		description: "Fastest and most budget-friendly multimodal model in the 2.5 family",
 		thinking: true
 	}
 };
