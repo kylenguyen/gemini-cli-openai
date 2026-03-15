@@ -373,7 +373,25 @@ export class GeminiApiClient {
 		const contents = messages.map((msg) => this.messageToGeminiFormat(msg));
 
 		if (systemPrompt) {
-			contents.unshift({ role: "user", parts: [{ text: systemPrompt }] });
+			// Merge system prompt into the first user message to avoid consecutive
+			// same-role messages, which the Gemini API rejects with HTTP 400.
+			if (contents.length > 0 && contents[0].role === "user") {
+				contents[0].parts.unshift({ text: systemPrompt });
+			} else {
+				contents.unshift({ role: "user", parts: [{ text: systemPrompt }] });
+			}
+		}
+
+		// Merge consecutive same-role messages to satisfy Gemini's alternating turns requirement.
+		// This can happen when multiple tool responses (mapped to "user") follow each other,
+		// or when system prompt + first user message create adjacent "user" entries.
+		const mergedContents: GeminiFormattedMessage[] = [];
+		for (const msg of contents) {
+			if (mergedContents.length > 0 && mergedContents[mergedContents.length - 1].role === msg.role) {
+				mergedContents[mergedContents.length - 1].parts.push(...msg.parts);
+			} else {
+				mergedContents.push({ role: msg.role, parts: [...msg.parts] });
+			}
 		}
 
 		// Check if this is a thinking model and which thinking mode to use
@@ -436,7 +454,7 @@ export class GeminiApiClient {
 			model: modelId,
 			project: projectId,
 			request: {
-				contents: contents,
+				contents: mergedContents,
 				generationConfig,
 				tools: tools,
 				toolConfig: finalToolConfig
