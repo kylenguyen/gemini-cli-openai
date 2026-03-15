@@ -8,19 +8,53 @@ import { loggingMiddleware } from "./middlewares/logging";
 /**
  * Gemini CLI OpenAI Worker
  *
- * A Cloudflare Worker that provides OpenAI-compatible API endpoints
- * for Google's Gemini models via the Gemini CLI OAuth flow.
+ * Provides OpenAI-compatible API endpoints for Google's Gemini models
+ * via the Gemini CLI OAuth flow.
  *
  * Features:
  * - OpenAI-compatible chat completions and model listing
- * - OAuth2 authentication with token caching via Cloudflare KV
- * - Support for multiple Gemini models (2.5 Pro, 2.0 Flash, 1.5 Pro, etc.)
+ * - OAuth2 authentication with token caching via in-memory KV store
+ * - Support for multiple Gemini models (2.5 Pro, 2.5 Flash, etc.)
  * - Streaming responses compatible with OpenAI SDK
  * - Debug and testing endpoints for troubleshooting
  */
 
 // Create the main Hono app
 const app = new Hono<{ Bindings: Env }>();
+
+// Middleware to bind environment variables from process.env to Hono's context
+// This replaces Cloudflare Workers' automatic env binding
+app.use("*", async (c, next) => {
+	// Lazily import the kvStore to avoid circular dependency
+	const { kvStore } = await import("./server");
+
+	c.env = {
+		...c.env,
+		GCP_SERVICE_ACCOUNT: process.env.GCP_SERVICE_ACCOUNT || "",
+		GEMINI_PROJECT_ID: process.env.GEMINI_PROJECT_ID,
+		GEMINI_CLI_KV: kvStore,
+		OPENAI_API_KEY: process.env.OPENAI_API_KEY,
+		ENABLE_FAKE_THINKING: process.env.ENABLE_FAKE_THINKING,
+		ENABLE_REAL_THINKING: process.env.ENABLE_REAL_THINKING,
+		STREAM_THINKING_AS_CONTENT: process.env.STREAM_THINKING_AS_CONTENT,
+		ENABLE_AUTO_MODEL_SWITCHING: process.env.ENABLE_AUTO_MODEL_SWITCHING,
+		GEMINI_MODERATION_HARASSMENT_THRESHOLD: process.env.GEMINI_MODERATION_HARASSMENT_THRESHOLD as Env["GEMINI_MODERATION_HARASSMENT_THRESHOLD"],
+		GEMINI_MODERATION_HATE_SPEECH_THRESHOLD: process.env.GEMINI_MODERATION_HATE_SPEECH_THRESHOLD as Env["GEMINI_MODERATION_HATE_SPEECH_THRESHOLD"],
+		GEMINI_MODERATION_SEXUALLY_EXPLICIT_THRESHOLD: process.env.GEMINI_MODERATION_SEXUALLY_EXPLICIT_THRESHOLD as Env["GEMINI_MODERATION_SEXUALLY_EXPLICIT_THRESHOLD"],
+		GEMINI_MODERATION_DANGEROUS_CONTENT_THRESHOLD: process.env.GEMINI_MODERATION_DANGEROUS_CONTENT_THRESHOLD as Env["GEMINI_MODERATION_DANGEROUS_CONTENT_THRESHOLD"],
+		ENABLE_GEMINI_NATIVE_TOOLS: process.env.ENABLE_GEMINI_NATIVE_TOOLS,
+		ENABLE_GOOGLE_SEARCH: process.env.ENABLE_GOOGLE_SEARCH,
+		ENABLE_URL_CONTEXT: process.env.ENABLE_URL_CONTEXT,
+		GEMINI_TOOLS_PRIORITY: process.env.GEMINI_TOOLS_PRIORITY,
+		DEFAULT_TO_NATIVE_TOOLS: process.env.DEFAULT_TO_NATIVE_TOOLS,
+		ALLOW_REQUEST_TOOL_CONTROL: process.env.ALLOW_REQUEST_TOOL_CONTROL,
+		ENABLE_INLINE_CITATIONS: process.env.ENABLE_INLINE_CITATIONS,
+		INCLUDE_GROUNDING_METADATA: process.env.INCLUDE_GROUNDING_METADATA,
+		INCLUDE_SEARCH_ENTRY_POINT: process.env.INCLUDE_SEARCH_ENTRY_POINT,
+	} as Env;
+
+	await next();
+});
 
 // Add logging middleware
 app.use("*", loggingMiddleware);
@@ -56,9 +90,10 @@ app.get("/", (c) => {
 	const requiresAuth = !!c.env.OPENAI_API_KEY;
 
 	return c.json({
-		name: "Gemini CLI OpenAI Worker",
+		name: "Gemini CLI OpenAI Server",
 		description: "OpenAI-compatible API for Google Gemini models via OAuth",
 		version: "1.0.0",
+		runtime: "Node.js",
 		authentication: {
 			required: requiresAuth,
 			type: requiresAuth ? "Bearer token in Authorization header" : "None"
@@ -81,4 +116,4 @@ app.get("/health", (c) => {
 	return c.json({ status: "ok", timestamp: new Date().toISOString() });
 });
 
-export default app;
+export { app };

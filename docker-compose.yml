@@ -1,13 +1,9 @@
-version: '3.8'
-
 services:
-  gemini-worker:
+  gemini-server:
     build:
       context: .
       dockerfile: Dockerfile
-      args:
-        NODE_ENV: development
-    container_name: gemini-cli-worker
+    container_name: gemini-cli-server
     ports:
       - "8787:8787"  # Host:Container port mapping
     volumes:
@@ -15,15 +11,12 @@ services:
       - .:/app
       # Exclude node_modules to avoid conflicts between host and container
       - /app/node_modules
-      # Create named volume for persistent storage (KV, R2, etc.)
-      # This ensures data survives container restarts
-      - gemini_storage_data:/app/.mf
     environment:
-      # Set NODE_ENV for development
       - NODE_ENV=development
-    # Load environment variables from .dev.vars file (if exists)
+      - PORT=8787
+    # Load environment variables from .env file
     env_file:
-      - .dev.vars
+      - .env
     # Restart policy
     restart: unless-stopped
     # Health check
@@ -33,8 +26,3 @@ services:
       timeout: 10s
       retries: 3
       start_period: 10s
-
-# Named volumes for data persistence
-volumes:
-  gemini_storage_data:
-    driver: local
